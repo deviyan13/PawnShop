@@ -8,6 +8,8 @@ python -m venv venv
 myenv\Scripts\activate
 ```
 
+В .env поменяй порт на 5432 (у меня просто он для postgres 5433)
+
 Потом
 ```
 pip install -r requirements.txt
