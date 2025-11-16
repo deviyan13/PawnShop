@@ -202,6 +202,17 @@ def populate_test_data():
         cur.execute("SELECT COUNT(*) as count FROM requests")
         print(f"Заявок: {cur.fetchone()['count']}")
 
+        cur.execute('''
+            INSERT INTO tariffs (name, category_id, branch_id, loan_percent, interest_rate, min_loan, max_loan, effective_from, description)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
+        ''', (
+            'Гарантированный общий тариф',
+            None, None, 30.0, 15.0, 10, 10000, '2024-01-01',
+            'Гарантированный тариф для всех случаев'
+        ))
+        print('Общий тариф добавлен')
+
         print("\n=== Тестовые аккаунты ===")
         print("Администраторы:")
         print("  admin@lombard.by / 123456")
@@ -223,27 +234,5 @@ def populate_test_data():
 
 
 if __name__ == '__main__':
-    #populate_test_data()
-    # Гарантированный общий тариф на случай, если другие не подходят
-    conn = psycopg2.connect(
-        host=os.getenv('DB_HOST', 'localhost'),
-        port=os.getenv('DB_PORT', '5432'),
-        database=os.getenv('DB_NAME', 'flask_pawn_shop_db'),
-        user=os.getenv('DB_USER', 'lombard_user'),
-        password=os.getenv('DB_PASSWORD', '123456')
-    )
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    populate_test_data()
 
-    # Устанавливаем схему
-    schema = os.getenv('DB_SCHEMA', 'lombard')
-    cur.execute(f"SET search_path TO {schema}, public;")
-
-    cur.execute('''
-        INSERT INTO tariffs (name, category_id, branch_id, loan_percent, interest_rate, min_loan, max_loan, effective_from, description)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT DO NOTHING
-    ''', (
-        'Гарантированный общий тариф',
-        None, None, 30.0, 15.0, 10, 10000, '2024-01-01',
-        'Гарантированный тариф для всех случаев'
-    ))
