@@ -62,12 +62,22 @@
                 <h6>Расчетные суммы:</h6>
                 {% set loan_amount = [request.estimated_cost * tariff.loan_percent / 100, tariff.max_loan] | min if tariff.max_loan else request.estimated_cost * tariff.loan_percent / 100 %}
                 {% set loan_amount = [loan_amount, tariff.min_loan] | max if tariff.min_loan else loan_amount %}
-                {% set ransom_amount = loan_amount * (1 + tariff.interest_rate / 100) %}
-
-                <p><strong>Сумма займа:</strong> {{ "%.2f"|format(loan_amount) }} BYN</p>
-                <p><strong>Сумма выкупа:</strong> {{ "%.2f"|format(ransom_amount) }} BYN</p>
 
                 <form method="POST" action="{{ url_for('admin.approve_request', request_id=request.request_id) }}">
+                    <div class="mb-3">
+                        <label for="loan_days" class="form-label"><strong>Срок займа (дни):</strong></label>
+                        <input type="number" class="form-control" id="loan_days" name="loan_days"
+                               value="30" min="1" max="365" required>
+                        <div class="form-text">Введите количество дней на которые выдается займ</div>
+                    </div>
+
+                    {% set loan_amount_float = loan_amount|float %}
+                    {% set interest_rate_float = tariff.interest_rate|float %}
+                    {% set ransom_amount = loan_amount_float * (1 + (interest_rate_float / 100) * (30 / 30)) %}
+
+                    <p><strong>Сумма займа:</strong> {{ "%.2f"|format(loan_amount) }} BYN</p>
+                    <p><strong>Сумма выкупа:</strong> {{ "%.2f"|format(ransom_amount) }} BYN</p>
+
                     <button type="submit" class="btn btn-success btn-lg w-100 mb-2">Одобрить заявку</button>
                 </form>
                 {% else %}

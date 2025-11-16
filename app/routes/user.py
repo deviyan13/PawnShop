@@ -3,6 +3,7 @@ from app.utils.auth import get_current_user
 from app.utils.database import get_db, query_db
 from app.forms import RequestForm
 from datetime import datetime
+from app.services.ticket_service import update_expired_tickets
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -13,6 +14,9 @@ def dashboard():
     if not user:
         flash('Пожалуйста, войдите в систему', 'error')
         return redirect(url_for('auth.login'))
+
+    # Обновляем статусы просроченных талонов
+    update_expired_tickets()
 
     # Получаем заявки пользователя
     requests = query_db('''

@@ -3,6 +3,8 @@ from app.utils.auth import get_current_user
 from app.utils.database import get_db, query_db
 from app.services.tariff_service import find_tariff
 from datetime import datetime, timedelta
+from app.services.ticket_service import update_expired_tickets
+from decimal import Decimal
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -141,6 +143,14 @@ def approve_request(request_id):
             flash('Невозможно обработать заявку', 'error')
             return redirect(url_for('admin.requests'))
 
+        # Получаем срок займа из формы (по умолчанию 30 дней)
+        loan_days = request.form.get('loan_days', 30, type=int)
+
+        # Валидация срока займа
+        if loan_days < 1 or loan_days > 365:
+            flash('Срок займа должен быть от 1 до 365 дней', 'error')
+            return redirect(url_for('admin.request_detail', request_id=request_id))
+
         # Находим подходящий тариф
         tariff = find_tariff(request_data['category_id'], request_data['branch_id'], request_data['estimated_cost'])
 
@@ -148,15 +158,19 @@ def approve_request(request_id):
             flash('Не найден подходящий тариф', 'error')
             return redirect(url_for('admin.request_detail', request_id=request_id))
 
-        # Рассчитываем суммы
-        loan_amount = min(
-            request_data['estimated_cost'] * tariff['loan_percent'] / 100,
-            tariff['max_loan'] if tariff['max_loan'] else float('inf')
-        )
-        loan_amount = max(loan_amount, tariff['min_loan'] if tariff['min_loan'] else 0)
+        # Рассчитываем суммы с использованием сервиса
+        from app.services.ticket_service import calculate_loan_amount, calculate_ransom_amount
 
-        # Выкупная сумма (заём + проценты за 1 месяц)
-        ransom_amount = loan_amount * (1 + tariff['interest_rate'] / 100)
+        loan_amount = calculate_loan_amount(
+            Decimal(str(request_data['estimated_cost'])),
+            tariff
+        )
+
+        ransom_amount = calculate_ransom_amount(
+            loan_amount,
+            tariff['interest_rate'],
+            loan_days
+        )
 
         # Создаем запись вещи
         cur.execute('''
@@ -175,7 +189,7 @@ def approve_request(request_id):
         # Создаем талон
         ticket_number = f"TKT-{datetime.now().strftime('%Y%m%d')}-{request_id}"
         admission_date = datetime.now().date()
-        end_date = admission_date + timedelta(days=30)  # 30 дней
+        end_date = admission_date + timedelta(days=loan_days)
 
         cur.execute('''
             INSERT INTO pawn_tickets 
@@ -190,8 +204,8 @@ def approve_request(request_id):
             request_data['branch_id'],
             admission_date,
             end_date,
-            loan_amount,
-            ransom_amount,
+            float(loan_amount),  # Конвертируем в float для хранения в БД
+            float(ransom_amount),  # Конвертируем в float для хранения в БД
             tariff['tariff_id'],
             'issued',
             session['user_id']
@@ -213,12 +227,13 @@ def approve_request(request_id):
                 'request_id': request_id,
                 'ticket_number': ticket_number,
                 'loan_amount': float(loan_amount),
-                'ransom_amount': float(ransom_amount)
+                'ransom_amount': float(ransom_amount),
+                'loan_days': loan_days
             })
         ))
 
         conn.commit()
-        flash('Заявка одобрена! Талон успешно создан.', 'success')
+        flash(f'Заявка одобрена! Талон успешно создан на {loan_days} дней.', 'success')
 
     except Exception as e:
         conn.rollback()
@@ -260,7 +275,12 @@ def reject_request(request_id):
 @admin_bp.route('/tickets')
 @admin_required
 def tickets():
-    # Получаем филиалы администратора
+    # Обновляем статусы просроченных талонов перед показом
+    expired_count = update_expired_tickets()
+    if expired_count > 0:
+        flash(f'Обновлено {expired_count} просроченных талонов', 'info')
+
+    # Остальной код остается без изменений...
     user_branches = query_db('''
         SELECT b.branch_id FROM user_branches ub
         JOIN branches b ON ub.branch_id = b.branch_id

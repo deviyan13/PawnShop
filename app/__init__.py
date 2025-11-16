@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import threading
 from flask import Flask
 from app.config import config
 
@@ -32,6 +32,12 @@ def create_app(config_name=None):
     app.register_blueprint(main_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(admin_bp)
+
+    # Запускаем планировщик в отдельном потоке (только в production)
+    if config_name == 'production':
+        from app.tasks.scheduler import run_scheduler
+        scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
+        scheduler_thread.start()
 
     @app.context_processor
     def inject_now():
