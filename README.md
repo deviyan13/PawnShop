@@ -17,7 +17,7 @@ WITH
 GRANT ALL PRIVILEGES ON DATABASE flask_pawn_shop_db TO lombard_user;
 ```
 
-Создай виртаульное окружение venv
+Создай виртаульное окружение venv в корне репозитория (не в папке app)
 ```
 python -m venv venv
 ```
