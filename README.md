@@ -17,17 +17,17 @@ WITH
 GRANT ALL PRIVILEGES ON DATABASE flask_pawn_shop_db TO lombard_user;
 ```
 
-Создай виртаульное окружение venv в корне репозитория (не в папке app)
+Создайте виртаульное окружение venv в корне репозитория (не в папке app)
 ```
 python -m venv venv
 ```
 
-Зайди в него 
+Запустите venv 
 ```
-myenv\Scripts\activate
+venv\Scripts\activate
 ```
 
-В .env поменяй порт на 5432 (у меня просто он для postgres 5433)
+В .env поменяйте порт на 5432 (у меня просто он для postgres 5433)
 
 Потом
 ```
