@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Отчеты - Панель администратора{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Отчеты и статистика</h2>
+        <p class="lead">Статистика по вашим филиалам</p>
+
+        <div class="row mb-4">
+            <!-- Статистика по заявкам -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Статистика заявок</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="border rounded p-2">
+                                    <h4 class="text-primary mb-0">{{ requests_stats.total }}</h4>
+                                    <small class="text-muted">Всего</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="border rounded p-2">
+                                    <h4 class="text-warning mb-0">{{ requests_stats.pending }}</h4>
+                                    <small class="text-muted">На рассмотрении</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="border rounded p-2">
+                                    <h4 class="text-success mb-0">{{ requests_stats.approved }}</h4>
+                                    <small class="text-muted">Одобрено</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="border rounded p-2">
+                                    <h4 class="text-danger mb-0">{{ requests_stats.rejected }}</h4>
+                                    <small class="text-muted">Отклонено</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Статистика по талонам -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Статистика талонов</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="border rounded p-2">
+                                    <h4 class="text-primary mb-0">{{ tickets_stats.total }}</h4>
+                                    <small class="text-muted">Всего</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="border rounded p-2">
+                                    <h4 class="text-success mb-0">{{ tickets_stats.active }}</h4>
+                                    <small class="text-muted">Активных</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="border rounded p-2">
+                                    <h4 class="text-info mb-0">{{ tickets_stats.redeemed }}</h4>
+                                    <small class="text-muted">Выкуплено</small>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="border rounded p-2">
+                                    <h4 class="text-danger mb-0">{{ tickets_stats.defaulted }}</h4>
+                                    <small class="text-muted">Просрочено</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row text-center mt-2">
+                            <div class="col-6">
+                                <div class="border rounded p-2">
+                                    <h6 class="text-success mb-0">{{ "%.2f"|format(tickets_stats.total_loans) }} BYN</h6>
+                                    <small class="text-muted">Выдано займов</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-2">
+                                    <h6 class="text-info mb-0">{{ "%.2f"|format(tickets_stats.total_ransom) }} BYN</h6>
+                                    <small class="text-muted">Ожидается выкупа</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Топ пользователей -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Самые активные клиенты</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if top_users %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Клиент</th>
+                                        <th>Заявок</th>
+                                        <th>Общая оценка</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in top_users %}
+                                    <tr>
+                                        <td>
+                                            {{ user.first_name }} {{ user.last_name }}
+                                            <br><small class="text-muted">{{ user.email }}</small>
+                                        </td>
+                                        <td>{{ user.request_count }}</td>
+                                        <td>{{ "%.2f"|format(user.total_estimated) }} BYN</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">Нет данных о клиентах</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Быстрые действия</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('admin.requests') }}?status=submitted" class="btn btn-primary">
+                                Заявки на рассмотрении ({{ requests_stats.pending }})
+                            </a>
+                            <a href="{{ url_for('admin.tickets') }}?status=issued" class="btn btn-success">
+                                Активные талоны ({{ tickets_stats.active }})
+                            </a>
+                            <a href="{{ url_for('admin.branches') }}" class="btn btn-outline-primary">
+                                Мои филиалы
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

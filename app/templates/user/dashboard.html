@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Личный кабинет - Ломбард Минск{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Личный кабинет</h2>
+        <p class="lead">Добро пожаловать, {{ session.user_name }}!</p>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Мои заявки</h5>
+                        <p class="card-text display-6">{{ requests|length }}</p>
+                        <a href="{{ url_for('user.my_requests') }}" class="btn btn-primary">Просмотреть</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Активные талоны</h5>
+                        <p class="card-text display-6">{{ tickets|length }}</p>
+                        <a href="{{ url_for('user.tickets') }}" class="btn btn-primary">Просмотреть</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2 mb-4">
+            <a href="{{ url_for('user.new_request') }}" class="btn btn-success btn-lg">Подать новую заявку</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Последние заявки</h4>
+                {% if requests %}
+                    {% for request in requests[:5] %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ request.item_name }}</h6>
+                            <p class="card-text">
+                                <small>Филиал: {{ request.branch_name }}</small><br>
+                                <small>Категория: {{ request.category_name }}</small><br>
+                                <small>Стоимость: {{ request.estimated_cost }} BYN</small><br>
+                                <span class="badge bg-{% if request.status == 'submitted' %}warning{% elif request.status == 'approved' %}success{% else %}danger{% endif %}">
+                                    {{ request.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>У вас пока нет заявок</p>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <h4>Активные талоны</h4>
+                {% if tickets %}
+                    {% for ticket in tickets[:5] %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ ticket.item_name }}</h6>
+                            <p class="card-text">
+                                <small>Филиал: {{ ticket.branch_name }}</small><br>
+                                <small>Сумма займа: {{ ticket.loan_amount }} BYN</small><br>
+                                <small>Выкуп: {{ ticket.ransom_amount }} BYN</small><br>
+                                <small>До: {{ ticket.end_date.strftime('%d.%m.%Y') }}</small>
+                            </p>
+                            <a href="{{ url_for('user.tickets') }}" class="btn btn-sm btn-primary">Подробнее</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>У вас пока нет активных талонов</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

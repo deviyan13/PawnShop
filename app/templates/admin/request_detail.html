@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Заявка {{ request.request_number }} - Ломбард Минск{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Заявка {{ request.request_number }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Информация о клиенте</h5>
+                        <p><strong>Имя:</strong> {{ request.first_name }} {{ request.last_name }}</p>
+                        <p><strong>Email:</strong> {{ request.email }}</p>
+                        <p><strong>Телефон:</strong> {{ request.phone or 'Не указан' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Информация о заявке</h5>
+                        <p><strong>Филиал:</strong> {{ request.branch_name }}</p>
+                        <p><strong>Категория:</strong> {{ request.category_name }}</p>
+                        <p><strong>Дата подачи:</strong> {{ request.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                        <p><strong>Статус:</strong>
+                            <span class="badge bg-{% if request.status == 'submitted' %}warning{% elif request.status == 'approved' %}success{% else %}danger{% endif %}">
+                                {{ request.status }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h5>Информация о вещи</h5>
+                <p><strong>Название:</strong> {{ request.item_name }}</p>
+                <p><strong>Описание:</strong> {{ request.item_description or 'Не указано' }}</p>
+                <p><strong>Оценочная стоимость:</strong> {{ request.estimated_cost }} BYN</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        {% if request.status == 'submitted' %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Одобрение заявки</h5>
+            </div>
+            <div class="card-body">
+                {% if tariff %}
+                <h6>Подобранный тариф:</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Название:</strong> {{ tariff.name }}</li>
+                    <li><strong>Процент займа:</strong> {{ tariff.loan_percent }}%</li>
+                    <li><strong>Процентная ставка:</strong> {{ tariff.interest_rate }}% в месяц</li>
+                    <li><strong>Мин. займ:</strong> {{ tariff.min_loan or 0 }} BYN</li>
+                    <li><strong>Макс. займ:</strong> {{ tariff.max_loan or 'Не ограничено' }} BYN</li>
+                </ul>
+
+                <hr>
+
+                <h6>Расчетные суммы:</h6>
+                {% set loan_amount = [request.estimated_cost * tariff.loan_percent / 100, tariff.max_loan] | min if tariff.max_loan else request.estimated_cost * tariff.loan_percent / 100 %}
+                {% set loan_amount = [loan_amount, tariff.min_loan] | max if tariff.min_loan else loan_amount %}
+                {% set ransom_amount = loan_amount * (1 + tariff.interest_rate / 100) %}
+
+                <p><strong>Сумма займа:</strong> {{ "%.2f"|format(loan_amount) }} BYN</p>
+                <p><strong>Сумма выкупа:</strong> {{ "%.2f"|format(ransom_amount) }} BYN</p>
+
+                <form method="POST" action="{{ url_for('admin.approve_request', request_id=request.request_id) }}">
+                    <button type="submit" class="btn btn-success btn-lg w-100 mb-2">Одобрить заявку</button>
+                </form>
+                {% else %}
+                <div class="alert alert-warning">
+                    Не найден подходящий тариф для данной заявки.
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('admin.reject_request', request_id=request.request_id) }}">
+                    <button type="submit" class="btn btn-danger btn-lg w-100">Отклонить заявку</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-{% if request.status == 'approved' %}success{% else %}danger{% endif %}">
+                    Заявка уже обработана: <strong>{{ request.status }}</strong>
+                </div>
+                <a href="{{ url_for('admin.requests') }}?status={{ request.status }}" class="btn btn-primary w-100">Вернуться к списку</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Заявки - Панель администратора{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Заявки</h2>
+            <div>
+                <a href="{{ url_for('admin.requests') }}?status=submitted" class="btn btn-outline-primary {% if status_filter == 'submitted' %}active{% endif %}">На рассмотрении</a>
+                <a href="{{ url_for('admin.requests') }}?status=approved" class="btn btn-outline-success {% if status_filter == 'approved' %}active{% endif %}">Одобренные</a>
+                <a href="{{ url_for('admin.requests') }}?status=rejected" class="btn btn-outline-danger {% if status_filter == 'rejected' %}active{% endif %}">Отклоненные</a>
+            </div>
+        </div>
+
+        {% if requests %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>№ Заявки</th>
+                        <th>Клиент</th>
+                        <th>Телефон</th>
+                        <th>Вещь</th>
+                        <th>Филиал</th>
+                        <th>Категория</th>
+                        <th>Стоимость</th>
+                        <th>Дата подачи</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests %}
+                    <tr>
+                        <td>{{ request.request_number }}</td>
+                        <td>{{ request.first_name }} {{ request.last_name }}</td>
+                        <td>{{ request.phone or 'Не указан' }}</td>
+                        <td>{{ request.item_name }}</td>
+                        <td>{{ request.branch_name }}</td>
+                        <td>{{ request.category_name }}</td>
+                        <td>{{ request.estimated_cost }} BYN</td>
+                        <td>{{ request.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('admin.request_detail', request_id=request.request_id) }}" class="btn btn-sm btn-primary">Подробнее</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <h4>Заявки не найдены</h4>
+            <p class="text-muted">Нет заявок со статусом "{{ status_filter }}"</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

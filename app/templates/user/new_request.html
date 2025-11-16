@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Новая заявка - Ломбард Минск{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">Подача новой заявки</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.branch_id.label(class="form-label") }}
+                            {{ form.branch_id(class="form-select") }}
+                            {% for error in form.branch_id.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.category_id.label(class="form-label") }}
+                            {{ form.category_id(class="form-select") }}
+                            {% for error in form.category_id.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ form.item_name.label(class="form-label") }}
+                        {{ form.item_name(class="form-control", placeholder="Например: iPhone 14 Pro") }}
+                        {% for error in form.item_name.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.item_description.label(class="form-label") }}
+                        {{ form.item_description(class="form-control", rows="4", placeholder="Опишите состояние, характеристики, комплектацию...") }}
+                        {% for error in form.item_description.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.estimated_cost.label(class="form-label") }}
+                        <div class="input-group">
+                            {{ form.estimated_cost(class="form-control", placeholder="0.00") }}
+                            <span class="input-group-text">BYN</span>
+                        </div>
+                        {% for error in form.estimated_cost.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('user.dashboard') }}" class="btn btn-secondary me-md-2">Отмена</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5>Как работает оценка?</h5>
+                <ul>
+                    <li>Вы указываете примерную стоимость вещи</li>
+                    <li>Администратор проверит заявку и уточнит детали</li>
+                    <li>Сумма займа составит 40-70% от оценочной стоимости</li>
+                    <li>Срок займа - обычно 30 дней с возможностью продления</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

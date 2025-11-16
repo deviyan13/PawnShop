@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Мои филиалы - Панель администратора{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Мои филиалы</h2>
+        <p class="lead">Филиалы, за которые вы отвечаете</p>
+
+        <div class="row">
+            {% for branch in branches %}
+            <div class="col-md-6 mb-4">
+                <div class="card {% if branch.is_primary %}border-primary{% endif %}">
+                    <div class="card-header {% if branch.is_primary %}bg-primary text-white{% endif %}">
+                        <h5 class="card-title mb-0">
+                            {{ branch.name }}
+                            {% if branch.is_primary %}
+                            <span class="badge bg-light text-primary ms-2">Основной</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <strong>Адрес:</strong> {{ branch.address }}<br>
+                            <strong>Телефон:</strong> {{ branch.phone }}
+                        </p>
+                        
+                        <div class="row text-center mt-3">
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <h6 class="text-primary mb-0">{{ branch.pending_requests }}</h6>
+                                    <small class="text-muted">Заявок</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <h6 class="text-success mb-0">{{ branch.active_tickets }}</h6>
+                                    <small class="text-muted">Активных талонов</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2">
+                                    <h6 class="text-info mb-0">{{ branch.total_loans }} BYN</h6>
+                                    <small class="text-muted">Сумма займов</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="{{ url_for('admin.requests') }}?status=submitted" class="btn btn-sm btn-outline-primary">Заявки</a>
+                            <a href="{{ url_for('admin.tickets') }}?status=issued" class="btn btn-sm btn-outline-success">Талоньі</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

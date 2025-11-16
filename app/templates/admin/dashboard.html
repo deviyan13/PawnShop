@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Панель администратора - Ломбард Минск{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Панель администратора</h2>
+        <p class="lead">Добро пожаловать, {{ session.user_name }}!</p>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Заявки на рассмотрении</h5>
+                        <p class="card-text display-6">{{ pending_requests }}</p>
+                        <a href="{{ url_for('admin.requests') }}?status=submitted" class="btn btn-light">Просмотреть</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Активные талоны</h5>
+                        <p class="card-text display-6">{{ active_tickets }}</p>
+                        <a href="{{ url_for('admin.tickets') }}?status=issued" class="btn btn-light">Просмотреть</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title">Мои филиалы</h5>
+                        <p class="card-text display-6">{{ branches|length }}</p>
+                        <a href="{{ url_for('admin.branches') }}" class="btn btn-light">Просмотреть</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Последние заявки</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_requests %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>№ Заявки</th>
+                                        <th>Клиент</th>
+                                        <th>Вещь</th>
+                                        <th>Филиал</th>
+                                        <th>Стоимость</th>
+                                        <th>Дата</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in recent_requests %}
+                                    <tr>
+                                        <td>{{ request.request_number }}</td>
+                                        <td>{{ request.first_name }} {{ request.last_name }}</td>
+                                        <td>{{ request.item_name }}</td>
+                                        <td>{{ request.branch_name }}</td>
+                                        <td>{{ request.estimated_cost }} BYN</td>
+                                        <td>{{ request.created_at.strftime('%d.%m.%Y') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('admin.request_detail', request_id=request.request_id) }}" class="btn btn-sm btn-primary">Рассмотреть</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">Нет заявок на рассмотрении</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Быстрые действия</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('admin.requests') }}?status=submitted" class="btn btn-primary">Заявки на рассмотрении</a>
+                            <a href="{{ url_for('admin.tickets') }}?status=issued" class="btn btn-outline-primary">Активные талоны</a>
+                            <a href="{{ url_for('admin.reports') }}" class="btn btn-outline-primary">Отчеты</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
