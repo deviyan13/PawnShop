@@ -50,7 +50,7 @@
                 <ul class="navbar-nav">
                     {% if session.user_id %}
                         <li class="nav-item">
-                            <span class="navbar-text me-3">Привет, {{ session.user_name }}</span>
+                            <a class="nav-link" href="{{ url_for('user.dashboard') }}">{{ session.user_name }}</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('auth.logout') }}">Выйти</a>
