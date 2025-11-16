@@ -404,3 +404,105 @@ def reports():
                            requests_stats=requests_stats,
                            tickets_stats=tickets_stats,
                            top_users=top_users)
+
+@admin_bp.route('/audit-logs')
+@admin_required
+def audit_logs():
+    # Получаем филиалы администратора
+    user_branches = query_db('''
+        SELECT b.branch_id FROM user_branches ub
+        JOIN branches b ON ub.branch_id = b.branch_id
+        WHERE ub.user_id = %s
+    ''', [session['user_id']])
+
+    branch_ids = [b['branch_id'] for b in user_branches]
+
+    # Параметры пагинации и фильтрации
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    offset = (page - 1) * per_page
+
+    user_filter = request.args.get('user_id', type=int)
+    action_filter = request.args.get('action_key', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+
+    # Базовый запрос с JOIN для получения информации о пользователе
+    query = '''
+        SELECT al.*, u.first_name, u.last_name, u.email
+        FROM audit_logs al
+        LEFT JOIN users u ON al.user_id = u.user_id
+        WHERE 1=1
+    '''
+    params = []
+
+    # Фильтр по пользователю
+    if user_filter:
+        query += ' AND al.user_id = %s'
+        params.append(user_filter)
+
+    # Фильтр по действию
+    if action_filter:
+        query += ' AND al.action_key = %s'
+        params.append(action_filter)
+
+    # Фильтр по дате
+    if date_from:
+        query += ' AND DATE(al.action_time) >= %s'
+        params.append(date_from)
+    if date_to:
+        query += ' AND DATE(al.action_time) <= %s'
+        params.append(date_to)
+
+    # Сортировка и пагинация
+    query += ' ORDER BY al.action_time DESC LIMIT %s OFFSET %s'
+    params.extend([per_page, offset])
+
+    # Получаем записи аудита
+    logs = query_db(query, params)
+
+    # Общее количество записей для пагинации
+    count_query = 'SELECT COUNT(*) as total FROM audit_logs al WHERE 1=1'
+    count_params = []
+
+    if user_filter:
+        count_query += ' AND al.user_id = %s'
+        count_params.append(user_filter)
+    if action_filter:
+        count_query += ' AND al.action_key = %s'
+        count_params.append(action_filter)
+    if date_from:
+        count_query += ' AND DATE(al.action_time) >= %s'
+        count_params.append(date_from)
+    if date_to:
+        count_query += ' AND DATE(al.action_time) <= %s'
+        count_params.append(date_to)
+
+    total_count = query_db(count_query, count_params, one=True)['total']
+
+    # Получаем список пользователей для фильтра
+    users = query_db('''
+        SELECT DISTINCT u.user_id, u.first_name, u.last_name, u.email
+        FROM audit_logs al
+        JOIN users u ON al.user_id = u.user_id
+        ORDER BY u.first_name, u.last_name
+    ''')
+
+    # Получаем список уникальных действий для фильтра
+    actions = query_db('''
+        SELECT DISTINCT action_key 
+        FROM audit_logs 
+        ORDER BY action_key
+    ''')
+
+    return render_template('admin/audit_logs.html',
+                           logs=logs,
+                           page=page,
+                           per_page=per_page,
+                           total_count=total_count,
+                           users=users,
+                           actions=actions,
+                           user_filter=user_filter,
+                           action_filter=action_filter,
+                           date_from=date_from,
+                           date_to=date_to)

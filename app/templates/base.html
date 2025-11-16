@@ -31,7 +31,9 @@
                                     <li><a class="dropdown-item" href="{{ url_for('admin.tickets') }}">Активные талоны</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('admin.branches') }}">Мои филиалы</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('admin.reports') }}">Отчеты</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.audit_logs') }}">Журнал аудита</a></li>
                                 </ul>
+
                             </li>
                         {% else %}
                         {% if session.user_id and session.user_role != 1 %}
