@@ -1,3 +1,22 @@
+Создание бд в консоли postgres:
+```
+CREATE USER lombard_user WITH PASSWORD '123456';
+```
+```
+-- 2. Создание базы данных
+CREATE DATABASE flask_pawn_shop_db
+WITH 
+    OWNER = lombard_user
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'ru_RU.UTF-8'
+    LC_CTYPE = 'ru_RU.UTF-8'
+    TEMPLATE = template0;
+```
+```
+-- 3. Предоставление прав пользователю
+GRANT ALL PRIVILEGES ON DATABASE flask_pawn_shop_db TO lombard_user;
+```
+
 Создай виртаульное окружение venv
 ```
 python -m venv venv
