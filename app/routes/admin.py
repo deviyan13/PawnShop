@@ -121,12 +121,21 @@ def request_detail(request_id):
         flash('У вас нет доступа к этой заявке', 'error')
         return redirect(url_for('admin.requests'))
 
+    # Получаем прикрепленные фотографии
+    attachments = query_db('''
+        SELECT attachment_id, file_path, file_name, uploaded_at
+        FROM attachments 
+        WHERE request_id = %s
+        ORDER BY uploaded_at
+    ''', [request_id])
+
     # Ищем подходящий тариф
     tariff = find_tariff(request_data['category_id'], request_data['branch_id'], request_data['estimated_cost'])
 
     return render_template('admin/request_detail.html',
                            request=request_data,
-                           tariff=tariff)
+                           tariff=tariff,
+                           attachments=attachments)
 
 
 @admin_bp.route('/request/<int:request_id>/approve', methods=['POST'])

@@ -4,6 +4,7 @@ from app.utils.database import get_db, query_db
 from app.forms import RequestForm
 from datetime import datetime
 from app.services.ticket_service import update_expired_tickets
+from app.utils.file_utils import save_uploaded_files
 
 user_bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -58,10 +59,11 @@ def new_request():
         request_number = f"REQ-{datetime.now().strftime('%Y%m%d')}-{user['user_id']}-{datetime.now().timestamp()}"
 
         try:
+            # Создаем заявку
             cur.execute('''
                 INSERT INTO requests 
                 (request_number, user_id, branch_id, category_id, item_name, item_description, estimated_cost) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING request_id
             ''', (
                 request_number,
                 user['user_id'],
@@ -71,8 +73,25 @@ def new_request():
                 form.item_description.data,
                 form.estimated_cost.data
             ))
-            conn.commit()
 
+            request_id = cur.fetchone()['request_id']
+
+            # Обрабатываем загруженные фотографии
+            if form.photos.data and form.photos.data[0].filename:  # Проверяем, что файлы были загружены
+                saved_files = save_uploaded_files(form.photos.data, 'requests')
+
+                for file_info in saved_files:
+                    cur.execute('''
+                        INSERT INTO attachments (request_id, file_path, file_name, uploaded_by)
+                        VALUES (%s, %s, %s, %s)
+                    ''', (
+                        request_id,
+                        file_info['file_path'],
+                        file_info['file_name'],
+                        user['user_id']
+                    ))
+
+            # Логируем действие
             import json
             cur.execute('''
                 INSERT INTO audit_logs (user_id, action_key, payload)
@@ -83,11 +102,12 @@ def new_request():
                 json.dumps({
                     'request_number': request_number,
                     'item_name': form.item_name.data,
-                    'estimated_cost': float(form.estimated_cost.data)
+                    'estimated_cost': float(form.estimated_cost.data),
+                    'photos_count': len(saved_files) if 'saved_files' in locals() else 0
                 })
             ))
-            conn.commit()
 
+            conn.commit()
             flash('Заявка успешно создана!', 'success')
             return redirect(url_for('user.dashboard'))
 
@@ -96,7 +116,6 @@ def new_request():
             flash(f'Ошибка при создании заявки: {str(e)}', 'error')
 
     return render_template('user/new_request.html', form=form)
-
 
 @user_bp.route('/tickets')
 def tickets():

@@ -36,6 +36,29 @@
                 <p><strong>Название:</strong> {{ request.item_name }}</p>
                 <p><strong>Описание:</strong> {{ request.item_description or 'Не указано' }}</p>
                 <p><strong>Оценочная стоимость:</strong> {{ request.estimated_cost }} BYN</p>
+
+                <!-- Блок с фотографиями -->
+                {% if attachments %}
+                <hr>
+                <h5>Фотографии товара</h5>
+                <div class="row">
+                    {% for attachment in attachments %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <a href="{{ url_for('static', filename=attachment.file_path) }}" data-lightbox="request-images" data-title="{{ attachment.file_name }}">
+                                <img src="{{ url_for('static', filename=attachment.file_path) }}"
+                                     class="card-img-top"
+                                     alt="{{ attachment.file_name }}"
+                                     style="height: 200px; object-fit: cover;">
+                            </a>
+                            <div class="card-body text-center">
+                                <small class="text-muted">{{ attachment.file_name }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -1,5 +1,7 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, DecimalField, SubmitField
+from wtforms.fields.simple import MultipleFileField
 from wtforms.validators import DataRequired, Length, NumberRange, Email, Regexp
 from app.utils.database import query_db
 
@@ -69,5 +71,8 @@ class RequestForm(FlaskForm):
     estimated_cost = DecimalField('Оценочная стоимость', validators=[
         DataRequired(message='Укажите оценочную стоимость'),
         NumberRange(min=0, message='Стоимость не может быть отрицательной')
+    ])
+    photos = MultipleFileField('Фотографии товара', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Только изображения (JPG, PNG, GIF)')
     ])
     submit = SubmitField('Подать заявку')
